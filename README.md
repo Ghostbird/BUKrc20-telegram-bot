@@ -304,3 +304,32 @@ import re
 
 Start you bot, and if everything went well, you can run `/start` and it will tell you that it knows nothing about you. You can then tell it things about you.
 If you run `/start` again, he will reply with what he knows about you.
+
+## Persistence
+
+One last thing that you might have noticed is that the bot does not remember this information across restarts. Luckily the library we're using has us covered. Persistence is a built-in feature and extremely easy to add.
+
+Find the line that says:
+> `updater = Updater(TOKEN)`
+
+Change it to:
+
+```python3
+updater = Updater(TOKEN, persistence=PicklePersistence(filename='bot_data'))
+```
+
+Of course `PicklePersistence` must be imported. Your import line should look like this:
+
+```python3
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, PicklePersistence
+```
+
+Start the bot again, and tell it some things about yourself. Stop it, and restart it. If you run the `/start` command, it should immediately list the things you told it before the restart.
+
+## Conversations
+
+To learn about conversations, I recommend the [persistent conversation example](https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/persistentconversationbot.py) example.
+
+It combines most of what you have learned in this tutorial with the `ConversationHandler` which is a handler that combines other handlers with basic state management to create a conversation with multiple stages.
+
+There are plenty of other interesting [examples](https://github.com/python-telegram-bot/python-telegram-bot/tree/master/examples#readme) to try there too.

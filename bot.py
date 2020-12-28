@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import re
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, PicklePersistence
 
 TOKEN = 'YOUR TOKEN HERE'
 
@@ -36,7 +36,6 @@ def button(update: Update, context: CallbackContext) -> None:
     )
     update.callback_query.message.reply_dice(emoji=update.callback_query.data)
 
-
 def personal(update: Update, context: CallbackContext) -> int:
     # Start building a reply
     reply_list = [f'Hello {update.effective_user.first_name}']
@@ -66,7 +65,7 @@ def receive_info(update: Update, context: CallbackContext) -> int:
         f'So your {info[0]} {info[1]} {info[2]}, how interesting'
     )
 
-updater = Updater(TOKEN)
+updater = Updater(TOKEN, persistence=PicklePersistence(filename='bot_data'))
 
 # Make the hello command run the hello function
 updater.dispatcher.add_handler(CommandHandler('start', personal))
