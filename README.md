@@ -238,3 +238,69 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandle
 ```
 
 Give it a try. First send `/random`. Then click one of the buttons. If everything went well, the buttons are replaced by an animated random number of your choice.
+
+## It's all about the context
+
+Now we have learned to talk back and forth about with the bot. However it would be nice if the bot could reply based on something we told it before.
+
+The library we're using provides the `context.user_data` for this purpose. Let's make use of it.
+
+This function checks what it knows about the user, and lists it. Then it asks for more information.
+
+```python3
+def personal(update: Update, context: CallbackContext) -> int:
+    reply_list = [f'Hello {update.effective_user.first_name}']
+    if context.user_data:
+        reply_list.append('I know these things about you')
+        reply_list.extend([f'Your {key} {value_pair[0]} {value_pair[1]}' for (key, value_pair) in context.user_data.items()])
+    else:
+        reply_list.append('I don\'t know anything about you.')
+    reply_list.extend([
+        'Please tell me about yourself.',
+        'Use the format: My X is/have/are Y'
+    ])
+    update.message.reply_text('\n'.join(reply_list))
+```
+
+Let's run that command whenever the user starts talking to the bot or runs the `/start` command:
+
+```python3
+updater.dispatcher.add_handler(CommandHandler('start', personal))
+```
+
+If you try it out, you'll quickly realise that you only get sarcastic remarks back from your bot. We haven't actually written functionality that lets us tell the bot something about ourselves.
+
+This function works on messages matching the given *Regular expression*. Which is a method of expressing very simple grammars for text. The `INFO_REGEX` matches sentences such as *My head is large*, *My parents have children*, *My shoes are too small*. Besides that, thanks to the placement of the brackets, it will save the parts inside the brackets as *capture groups*. Hence the sentence *My shoes are too small* yields these groups: `['shoes', 'are', 'too small']
+
+We save this to the `context.user_data` in such a way that the sentence *My hands are too large* results in the data being saved as if we executed: `context.user_data['hands'] = ('are', 'too large')`
+
+```python3
+INFO_REGEX = r'^My (.+) (is|have|are) (.+)$'
+def receive_info(update: Update, context: CallbackContext) -> int:
+    # Extract the three capture groups
+    info = re.match(INFO_REGEX, update.message.text).groups()
+    # Using the first capture group as key, the second and third capture group are saved as a pair to the context.user_data
+    context.user_data[info[0]] = (info[1], info[2])
+
+    # Quote the information in the reply
+    update.message.reply_text(
+        f'So your {info[0]} {info[1]} {info[2]}, how interesting'
+    )
+```
+
+Now we add a handler that runs this function, but the filter specifies that the function should only be executed for messages that match the `INFO_REGEX`.
+
+**Important** Put this line *before* the line that adds the sarcastic reply handler. Because the first matching handler is used. And the sarcastic reply matches any text that is not a command.
+
+```python3
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(INFO_REGEX), receive_info))
+```
+
+Finally to make regular expressions work we must import that functionality by adding this line to imports:
+
+```python3
+import re
+```
+
+Start you bot, and if everything went well, you can run `/start` and it will tell you that it knows nothing about you. You can then tell it things about you.
+If you run `/start` again, he will reply with what he knows about you.
