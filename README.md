@@ -171,3 +171,70 @@ The `for (i, l) in enumerate...` part states that we're going to loop over those
 This means that `[(0, 'e'), (1, 'c'), (2, 'h'), (3, '0')]` is turned into `['E', 'c', 'H', 'o']`. Finally the surrounding `''.join(...)` takes the list of letters we now have and turns them back into a single line of text by putting `''` (nothing) in between each part of the list. Hence `['E', 'c', 'H', 'o']` is turned into `EcHo`.
 
 Now you have made you first bot that actually does somthing with the information the user sent you. Give it a try!
+
+## Callback query handling
+
+One nice feature of Telegram is that you can send people buttons that they can click. Another nice feature is that you can send an emoji to make a random number. Let's combine those to make a command that lets you choose the random number emoji to use.
+
+First the `random` function. This function sends you a text reply that asks you to choose one of the options.
+It also shows an `InlineKeyboardMarkup` which contains several `InlineKeyboardButton`s. On the first row we have a button that reads *Basketball* and whose value is the basketball emoji.
+On the second line we have first a button for *Dice* whose value is a die emoji and next a button for *Darts* whose value is a bullseye emoji.
+
+```python3
+def random(update: Update, context: CallbackContext) -> None:
+    reply_buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Basketball", callback_data='🏀')],
+        [
+            InlineKeyboardButton("Dice", callback_data='🎲'),
+            InlineKeyboardButton("Darts", callback_data='🎯'),
+        ]
+    ])
+    update.message.reply_text(
+        f'Hello {update.effective_user.first_name}, please choose an option:',
+        reply_markup=reply_buttons
+    )
+```
+
+Don't forget to add the command handler:
+
+```python3
+updater.dispatcher.add_handler(CommandHandler('random', random))
+```
+
+Your imports should start with:
+
+```python3
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+```
+
+If we try this now, we can see the buttons, clicking them shows a clock icon on the clicked button, but nothing happens. We should add a handler for the button click.
+
+Once such a button is pressed, the result should be handled in another function. Here we first mark the *question* we posed by showing the buttons as answered by calling `update.callback_query.answer()`. Telegram requires that we do this.
+Next we edit the original message where we showed the buttons, and we replace the list of buttons with an empty list. This removes the buttons, so that the user can only click them once.
+Finally we reply to the button click by sending the emoji value of the button that was pressed using `send_dice` to use it as a random number generation animation.
+
+```python3
+def button(update: Update, context: CallbackContext) -> None:
+    # Must call answer!
+    update.callback_query.answer()
+    # Remove buttons
+    update.callback_query.message.edit_reply_markup(
+        reply_markup=InlineKeyboardMarkup([])
+    )
+    update.callback_query.message.reply_dice(emoji=update.callback_query.data)
+```
+
+Don't forget to add these handlers:
+
+```python3
+updater.dispatcher.add_handler(CallbackQueryHandler(button))
+```
+
+And make sure you have all these imports:
+
+```python3
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler
+```
+
+Give it a try. First send `/random`. Then click one of the buttons. If everything went well, the buttons are replaced by an animated random number of your choice.
