@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import re
+import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, PicklePersistence
-
-TOKEN = 'YOUR TOKEN HERE'
 
 # This function replies with 'Hello <user.first_name>'
 def hello(update: Update, context: CallbackContext) -> None:
@@ -65,7 +64,7 @@ def receive_info(update: Update, context: CallbackContext) -> int:
         f'So your {info[0]} {info[1]} {info[2]}, how interesting'
     )
 
-updater = Updater(TOKEN, persistence=PicklePersistence(filename='bot_data'))
+updater = Updater(os.environ['TOKEN'], persistence=PicklePersistence(filename='bot_data'))
 
 # Make the hello command run the hello function
 updater.dispatcher.add_handler(CommandHandler('start', personal))

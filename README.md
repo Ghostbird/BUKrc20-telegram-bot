@@ -167,7 +167,7 @@ Now that's quite a compact piece of code, that warrants some explanation.
 
 `enumerate(update.message.text)` changes the input text into a list of pairs. These pairs consist of an index and the letter. So the text `echo` is turned into `[(0, 'e'), (1, 'c'), (2, 'h'), (3, '0')]`.
 The `for (i, l) in enumerate...` part states that we're going to loop over those pairs. In each pair we call the first entry, the number, `i` and the second entry, the letter, `l`.
-`l.upper() if i % 2 == 0 else l` is run for each of those `i, l` pairs and checks whether `i` is even by using `% 2` to get the remainder after division by two, then using `== 0` to ensure the remainder is zero. If that is true, it turns makes `l` into an upper case letter. `else l` means that if `i` is odd, `l` is not changed.
+`l.upper() if i % 2 == 0 else l` is run for each of those `i, l` pairs and checks whether `i` is even by using `% 2` to get the remainder after division by two, then using `== 0` to ensure the remainder is zero. If that is true, it turns `l` into an upper case letter. `else l` means that if `i` is odd, `l` is not changed.
 This means that `[(0, 'e'), (1, 'c'), (2, 'h'), (3, '0')]` is turned into `['E', 'c', 'H', 'o']`. Finally the surrounding `''.join(...)` takes the list of letters we now have and turns them back into a single line of text by putting `''` (nothing) in between each part of the list. Hence `['E', 'c', 'H', 'o']` is turned into `EcHo`.
 
 Now you have made you first bot that actually does somthing with the information the user sent you. Give it a try!
@@ -224,7 +224,7 @@ def button(update: Update, context: CallbackContext) -> None:
     update.callback_query.message.reply_dice(emoji=update.callback_query.data)
 ```
 
-Don't forget to add these handlers:
+Don't forget to add this handler:
 
 ```python3
 updater.dispatcher.add_handler(CallbackQueryHandler(button))
@@ -333,3 +333,42 @@ To learn about conversations, I recommend the [persistent conversation example](
 It combines most of what you have learned in this tutorial with the `ConversationHandler` which is a handler that combines other handlers with basic state management to create a conversation with multiple stages.
 
 There are plenty of other interesting [examples](https://github.com/python-telegram-bot/python-telegram-bot/tree/master/examples#readme) to try there too.
+
+## Token security
+
+If you want to upload your code somewhere, such as here to Github, you don't want to upload your token. Python provides a fairly simple mechanism to do this. Create a new file that is named `.env` next to your bot's python file. Find the line of code that says:
+
+```python3
+TOKEN='YOUR TOKEN HERE'
+```
+
+Move that line from the Python program to the `.env` file. Then find the line in the program that says:
+
+```python3
+updater = Updater(TOKEN, persistence=PicklePersistence(filename='bot_data'))
+```
+
+Replace `TOKEN` with `os.environ['TOKEN']`. `os.environ` contains environment variables. When you run a Python program and there is an adjacent `.env` file, it will add all `X=Y` key-value pairs from the `.env` file. Therefore `os.environ` will have your token.
+
+```python3
+updater = Updater(os.environ['TOKEN'], persistence=PicklePersistence(filename='bot_data'))
+```
+
+Finally ensure the program imports `os`. Add this to your import lines:
+
+```python3
+import os
+```
+
+### .gitignore
+
+Finally I'm using `git` for version control. Git has an ignore mechanism allows us to exclude files from version control. Therefore create a new file called `.gitignore` containing:
+
+```gitignore
+bot_data
+.env
+```
+
+This ensures that the `bot_data` and the `.env` file containing the token are never saved in version control.
+
+Run you bot again and verify that it still works. It now loads the token from the `.env` file.
