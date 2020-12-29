@@ -165,12 +165,12 @@ def echo(update: Update, context: CallbackContext) -> None:
 
 Now that's quite a compact piece of code, that warrants some explanation.
 
-`enumerate(update.message.text)` changes the input text into a list of pairs. These pairs consist of an index and the letter. So the text `echo` is turned into `[(0, 'e'), (1, 'c'), (2, 'h'), (3, '0')]`.
+`enumerate(update.message.text)` changes the input text into a list of pairs. These pairs consist of an index and the letter. So the text `echo` is turned into `[(0, 'e'), (1, 'c'), (2, 'h'), (3, 'o')]`.
 The `for (i, l) in enumerate...` part states that we're going to loop over those pairs. In each pair we call the first entry, the number, `i` and the second entry, the letter, `l`.
 `l.upper() if i % 2 == 0 else l` is run for each of those `i, l` pairs and checks whether `i` is even by using `% 2` to get the remainder after division by two, then using `== 0` to ensure the remainder is zero. If that is true, it turns `l` into an upper case letter. `else l` means that if `i` is odd, `l` is not changed.
-This means that `[(0, 'e'), (1, 'c'), (2, 'h'), (3, '0')]` is turned into `['E', 'c', 'H', 'o']`. Finally the surrounding `''.join(...)` takes the list of letters we now have and turns them back into a single line of text by putting `''` (nothing) in between each part of the list. Hence `['E', 'c', 'H', 'o']` is turned into `EcHo`.
+This means that `[(0, 'e'), (1, 'c'), (2, 'h'), (3, 'o')]` is turned into `['E', 'c', 'H', 'o']`. Finally the surrounding `''.join(...)` takes the list of letters we now have and turns them back into a single line of text by putting `''` (nothing) in between each part of the list. Hence `['E', 'c', 'H', 'o']` is turned into `EcHo`.
 
-Now you have made you first bot that actually does somthing with the information the user sent you. Give it a try!
+Now you have made you first bot that actually does something with the information the user sent you. Give it a try!
 
 ## Callback query handling
 
@@ -342,7 +342,7 @@ If you want to upload your code somewhere, such as here to Github, you don't wan
 TOKEN='YOUR TOKEN HERE'
 ```
 
-Move that line from the Python program to the `.env` file. Then find the line in the program that says:
+Move that line from the Python program to the `.env` file. If you have spaces around the equals sign (e.g. ` = `) please remove them. Then find the line in the program that says:
 
 ```python3
 updater = Updater(TOKEN, persistence=PicklePersistence(filename='bot_data'))
@@ -372,3 +372,61 @@ bot_data
 This ensures that the `bot_data` and the `.env` file containing the token are never saved in version control.
 
 Run you bot again and verify that it still works. It now loads the token from the `.env` file.
+
+## Deploying your bot
+
+Now you've noticed that your bot only works as long as the Python program is running on your computer. Once you've got it working and want it to be available to anyone, you might want to *deploy* your bot to a cloud service that runs it for you.
+
+In this case I'm going to put the code on Github and deploy to Heroku. You'll need two things for this:
+
+- [Github](https://github.com) account
+- [Heroku](https://heroku.com) account
+
+### Publish to GitHub
+
+Once you have those set up, you can got to the *Source Control* (<kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>G</kbd>) tab in VSCode and press the *Publish to GitHub* button. You'll be prompted to login to GitHub.
+It will ask you whether you want to publish this as a *private* or as a *public* repository. Now if you put your token in the `.env` file and added the `.gitignore` file, you can safely choose *public*. A public repository can be seen by everyone on the internet. A private repository can be seen only by you.
+
+If you accidentally published your token. You can talk to the Botfather and ask him to `/revoke` the token. You'll get a new token for your bot.
+
+### Heroku configuration
+
+Now login to Heroku. Click *New* » *Create new app*. Choose a name for your app, and choose whether to host in the US or in Europe. For Telegram bots such as these, it isn't that important, in general it's easiest to choose the closest location to your customers.
+
+On the next page in the *Deployment method* section, choose GitHub and complete the steps to connect your GitHub account. Once you've done that, hit the *Search* button to list all your GitHub *repositories* and choose the telegram bot one.
+
+Once you've done that, a little bit lower is the option for *Automatic deploys*. Press *Enable Automatic Deploys*. Now once you change your bot and *push* that update to GitHub, Heroku will automatically update your bot.
+
+Finally we must tell Heroku the token, which is not in the code on GitHub, because we don't want to publish that. Go to the *Settings* tab in Heroku and look for the *Config Vars* section. Click *Reveal Config Vars*. In the *Key* field enter `TOKEN` and in the *Value* field enter your token. Then press *Add*. Now Heroku knows your token and it will be available in the *environment* where your bot runs. Therefore the `os.environ['TOKEN']` in Python will be your token, even if we put it in the environment using the Heroku configuration, instead of the `.env` file.
+
+### Necessary set-up
+
+Now one last thing we should do to make the Heroku deployment work, is push a change to the *repository*. Luckily we *must* make a few changes to make the app work on Heroku.
+
+You might remember that at the very start you had to `pip install python-telegram-bot` to download the library. We must tell Heroku that it should do that. Python has a standard mechanism for that, and if we use that, as an added bonus Heroku will automatically detect that our program is written in Python.
+
+Add a new file called `requirements.txt` it should contain this line:
+
+```requirements
+python-telegram-bot
+```
+
+Next we must tell Heroku how it should start the program. Heroku's standard for this is the `Procfile`. Create a new file called `Procfile` (mind the capital P, `procfile` won't work). It should contain:
+
+```Procfile
+worker: python3 bot.py
+```
+
+### Auto-deploy from GitHub
+
+Go to the source control tab of VSCode again. You'll see that the added fiiles are shown. Click the `+` icon after every file name. Then enter a *commit message* for example: *Add Heroku configuration*. Confirm it by clicking the *Commit* check-mark that appears when you hover over the text *SOURCE CONTROL* or by pressing <kbd>Ctrl</kbd><kbd>Enter</kbd>.
+
+Finally in the bottom left corner of your VSCode window you should see the GitHub branch and status. Click on the synchronisation icon 🔁 to push your changes to GitHub.
+
+Now your code will be auto-deployed to Heroku.
+
+### Activate the Dyno
+
+Go to you app's *Overview* on Heroku. You'll see a *Dyno formation* menu. Click *Configure dynos*. If deployment went well, you'll see the `worker python3 bot.py` deployment here. Click the edit pencil behind that worker. Make sure your bot is not running on your local computer! Now click the switch on Heroku to activate the dyno and click *Confirm*.
+
+Start talking to your bot on Telegram. If everything went well, you'll notice that it responds because it is running in the cloud.
