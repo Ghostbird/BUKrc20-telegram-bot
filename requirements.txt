@@ -1,0 +1,2 @@
+# We only need the Telegram bot library
+python-telegram-bot
