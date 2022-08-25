@@ -377,6 +377,8 @@ Run you bot again and verify that it still works. It now loads the token from th
 
 Now you've noticed that your bot only works as long as the Python program is running on your computer. Once you've got it working and want it to be available to anyone, you might want to *deploy* your bot to a cloud service that runs it for you.
 
+> __Warning__ Heroku no longer offers the service described here for free! I recommend you look for another way to deploy your bot.
+
 In this case I'm going to put the code on Github and deploy to Heroku. You'll need two things for this:
 
 - [Github](https://github.com) account
