@@ -1,5 +1,8 @@
 # Python Telegram bot tutorial
 
+> [!IMPORTANT]  
+> This tutorial is outdated, and no longer works because the Python Telegram Bot library was changed.
+
 In this tutorial you're going to learn how to use Python to make a telegram bot.
 
 ## Requirements
